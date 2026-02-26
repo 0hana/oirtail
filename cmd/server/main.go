@@ -13,6 +13,6 @@ func main() {
     return c.SendString("Running Fiber v3")
   })
 
-  // Start server on port 8080
-  log.Fatal(app.Listen(":8080"))
+  // Start server on port 80
+  log.Fatal(app.Listen(":80"))
 }
