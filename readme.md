@@ -3,7 +3,7 @@
 Building the image
 --------------------------------------------------------------------------------
 ```sh
-docker build -t oirtail .
+docker build -t oirtail ./
 ```
 
 
