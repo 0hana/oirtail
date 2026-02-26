@@ -10,7 +10,7 @@ func main() {
   app := fiber.New()
 
   // Define route
-  app.Get("/api", func(c fiber.Ctx) error {
+  app.Get("/", func(c fiber.Ctx) error {
     return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().Unix()})
     // return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().Format("01021504")})
     // Go uses an interesting "Reference Date" string to specify format,
