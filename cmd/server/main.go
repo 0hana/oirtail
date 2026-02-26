@@ -11,7 +11,8 @@ func main() {
 
   // Define route
   app.Get("/api", func(c fiber.Ctx) error {
-    return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().Format("01021504")})
+    return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().Unix()})
+    // return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().Format("01021504")})
     // Go uses an interesting "Reference Date" string to specify format,
     // with a 1, 2, 3, 4, 5, 6 pattern:
     //
