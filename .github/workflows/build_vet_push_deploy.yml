@@ -2,7 +2,7 @@ name: Build -> Vet -> Push -> Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, github-actions ]
 
 # if multiple pushes occur, they could interrupt each other,
 # so we tell github/actions to queue up each workflow and let it
