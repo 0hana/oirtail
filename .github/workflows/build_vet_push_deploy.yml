@@ -86,4 +86,4 @@ jobs:
           sed -i'' "${line_1}r patch.txt" "${target}"  # inject patch
           fi
       - name: evaluate docker image
-        uses: liatrio/github-actions/apprentice-action@master
+        uses: liatrio/github-actions/apprentice-action@v1.0.0  # commit 0b41561cca6822cc8d880fe0e49e7807a41fdf91
