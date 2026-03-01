@@ -53,7 +53,17 @@ jobs:
         uses: actions/checkout@v4
       - name: build docker image
         run: |
-          docker build -t "${IMAGE_NAME}" -t "${IMAGE_LATEST}" ./
+          docker build                                                                                \
+            --tag   "${IMAGE_NAME}"                                                                   \
+            --tag   "${IMAGE_LATEST}"                                                                 \
+            --label "org.opencontainers.image.title`    `=${{ github.event.repository.name }}"        \
+            --label "org.opencontainers.image.description=${{ github.event.repository.description }}" \
+            --label "org.opencontainers.image.url`      `=${{ github.event.repository.html_url }}"    \
+            --label "org.opencontainers.image.source`   `=${{ github.event.repository.html_url }}"    \
+            --label "org.opencontainers.image.revision` `=${{ github.sha }}"                          \
+            --label "org.opencontainers.image.version`  `=${IMAGE_NAME##*:}"                          \
+            --label "org.opencontainers.image.created`  `=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"           \
+            ./
       - name: start docker container
         run: |
           docker run -dp 80:80 --name evil-oirtail "${IMAGE_NAME}"
