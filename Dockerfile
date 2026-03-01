@@ -18,8 +18,12 @@ RUN  go mod download
 COPY ./ ./
 
 # - Build (static binary)
-#   + CGO_ENABLED=0 diables C bindings to make static binary
-#   +    GOOS=linux tells go compiler to target linux kernel
+#   + `CGO_ENABLED=0`    diables C bindings to make static binary
+#   + `GOOS=linux`       tells go compiler to target linux kernel
+#   + `-ldflags="-s -w"` tells go compiler to omit:
+#     * symbol table
+#     * DWARF debug information
+#     to further slim-down production executable (and potentially obscure)
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" \
  -o main cmd/server/main.go
 
