@@ -64,6 +64,7 @@ jobs:
             --label "org.opencontainers.image.version`  `=${IMAGE_NAME##*:}"                          \
             --label "org.opencontainers.image.created`  `=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"           \
             ./
+          docker inspect "${IMAGE_NAME}"
       - name: start docker container
         run: |
           docker run -dp 80:80 --name evil-oirtail "${IMAGE_NAME}"
