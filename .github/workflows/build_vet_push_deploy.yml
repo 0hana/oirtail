@@ -45,12 +45,12 @@ jobs:
         uses: actions/checkout@v4
       - name: build docker image
         run: |
-          docker build -t "oirtail:${version_tag}" ./
+          docker build -t "${GITHUB_REPOSITORY}:${version_tag}" ./
         env:
           version_tag: ${{ needs.increment_version.outputs.version_tag }}
       - name: start docker container
         run: |
-          docker run -dp 80:80 --name evil-oirtail "oirtail:${version_tag}"
+          docker run -dp 80:80 --name evil-oirtail "${GITHUB_REPOSITORY}:${version_tag}"
         env:
           version_tag: ${{ needs.increment_version.outputs.version_tag }}
       - name: (nektos/act-Only) do NOT attempt surgery on liatrio apprentice-action
