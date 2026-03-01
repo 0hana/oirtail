@@ -12,12 +12,12 @@ Running the container
 
 ### Interactive mode (for dev/debug)
 ```sh
-docker run --rm -itp 8080:80 oirtail
+docker run --rm -itp 80:80 oirtail
 ```
-- `--rm`       : remove the container when stopped
-- `-i`         : interactive mode
-- `-t`         : allocate a pseudo-terminal
-- `-p 8080:80` : publish/port map host port 8080 to container port 80
+- `--rm`     : remove the container when stopped
+- `-i`       : interactive mode
+- `-t`       : allocate a pseudo-terminal
+- `-p 80:80` : publish/port map host port 80 to container port 80
 
 
 ### Detached mode (for deployment)

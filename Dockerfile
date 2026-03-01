@@ -4,6 +4,9 @@
 #
 FROM golang:1.26-alpine AS builder
 
+# - Install CA certificates for `go` app to use HTTPS
+RUN apk add --no-cache ca-certificates
+
 # - Create and `cd` to `/app/` directory
 WORKDIR /app/
 
@@ -14,14 +17,21 @@ RUN  go mod download
 # - Layered Caching: Download source files 2nd
 COPY ./ ./
 
-# - Build using Standard Go Project Layout: `cmd/server/main.go`
-RUN  go build -o main cmd/server/main.go
+# - Build (static binary)
+#   + `CGO_ENABLED=0`    diables C bindings to make static binary
+#   + `GOOS=linux`       tells go compiler to target linux kernel
+#   + `-ldflags="-s -w"` tells go compiler to omit:
+#     * symbol table
+#     * DWARF debug information
+#     to further slim-down production executable (and potentially obscure)
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" \
+ -o main cmd/server/main.go
 
 # ------------------------------------------------------------------------------
 # Multi-stage build (runner)
 #
-FROM alpine:latest AS runner
-WORKDIR /app/
-COPY --from=builder /app/main ./
+FROM scratch AS runner
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /app/main /main
 EXPOSE 80
-CMD ["./main"]
+ENTRYPOINT ["/main"]
