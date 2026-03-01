@@ -17,6 +17,10 @@ RUN  go mod download
 # - Layered Caching: Download source files 2nd
 COPY ./ ./
 
+# - Access Build ARGs
+ARG GIT_COMMIT
+ARG IMAGE_NAME
+
 # - Build (static binary)
 #   + `CGO_ENABLED=0`    diables C bindings to make static binary
 #   + `GOOS=linux`       tells go compiler to target linux kernel
@@ -24,7 +28,13 @@ COPY ./ ./
 #     * symbol table
 #     * DWARF debug information
 #     to further slim-down production executable (and potentially obscure)
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" \
+#   + `-ldflags="-X..."` tells go compiler to include data in the binary
+RUN CGO_ENABLED=0 GOOS=linux go build \
+ -ldflags=\
+"-s -w\
+ -X main.GIT_COMMIT=${GIT_COMMIT} \
+ -X main.IMAGE_NAME=${IMAGE_NAME} \
+"\
  -o main cmd/server/main.go
 
 # ------------------------------------------------------------------------------

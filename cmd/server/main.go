@@ -5,13 +5,26 @@ import (
   "time"
 )
 
+var (
+  GIT_COMMIT = ""
+  IMAGE_NAME = ""
+)
+
 func main() {
+  // Show provenance information
+  log.Printf("APP GIT_COMMIT = %s", GIT_COMMIT)
+  log.Printf("APP IMAGE_NAME = %s", IMAGE_NAME)
+
   // Init fiber app
   app := fiber.New()
 
+  app.Get("/about", func(c fiber.Ctx) error {
+    return c.JSON(fiber.Map{ "GIT_COMMIT": GIT_COMMIT, "IMAGE_NAME": IMAGE_NAME })
+  })
+
   // Define route
   app.Get("/", func(c fiber.Ctx) error {
-    return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().UnixMilli()})
+    return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().UnixMilli() })
     // return c.JSON(fiber.Map{ "message": "My name is 0hana", "timestamp": time.Now().Format("01021504")})
     // Go uses an interesting "Reference Date" string to specify format,
     // with a 1, 2, 3, 4, 5, 6 pattern:
