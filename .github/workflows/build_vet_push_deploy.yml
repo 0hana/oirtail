@@ -13,6 +13,8 @@ concurrency:
   cancel-in-progress: false  # allow workflow in progress to complete before starting
 
 jobs:
+  # Compute next Semantic Version number (vX.Y.Z)
+  # ----------------------------------------------------------------------------
   increment_version:
     runs-on: ubuntu-latest
     outputs:
@@ -26,14 +28,14 @@ jobs:
         id:   new_version
         run: |
           # Embedded version increment shell logic
-          latest_tag="$(git describe --tags --abbrev=0 2>'/dev/null' || printf '%s\n' '0.0.0')"
+          latest_tag="$(git describe --tags --abbrev=0 2>'/dev/null' || printf '%s\n' 'v0.0.-1')"
           # --abbrev=0 removes abbreviated commit hash from output
-          major="$(printf '%s\n' "${latest_tag}" | cut -d. -f1)"
-          minor="$(printf '%s\n' "${latest_tag}" | cut -d. -f2)"
-          patch="$(printf '%s\n' "${latest_tag}" | cut -d. -f3)"
+          major="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f1)"
+          minor="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f2)"
+          patch="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f3)"
           # We're only going to increment patch version,
           # so this logic is too oversimplified for a more comprehensive auto-versioning system
-          printf '%s\n' "version_tag=${major}.${minor}.$((patch+1))" | tee -a "${GITHUB_OUTPUT}"
+          printf '%s\n' "version_tag=v${major}.${minor}.$((patch+1))" | tee -a "${GITHUB_OUTPUT}"
 
   build_vet_push:
     needs: increment_version
