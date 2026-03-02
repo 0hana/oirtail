@@ -46,7 +46,7 @@ jobs:
 
   # The main job
   # ----------------------------------------------------------------------------
-  build_vet_push:
+  build_vet_push_deploy:
     needs: increment_version
     runs-on: ubuntu-latest
     steps:
@@ -138,3 +138,14 @@ jobs:
           git tag         "${IMAGE_NAME##*:}"
           git push origin "${IMAGE_NAME##*:}"
           printf '%s\n' 'Tagged.'
+      - name: deploy to cloudflare worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: |
+            versions deploy \
+              --image ${{ env.IMAGE_NAME }} \
+              --name evil-oirtail \
+              --port 80 \
+              --compatibility-date 2026-03-01
