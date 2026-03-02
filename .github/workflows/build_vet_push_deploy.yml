@@ -139,7 +139,7 @@ jobs:
           git push origin "${IMAGE_NAME##*:}"
           printf '%s\n' 'Tagged.'
       - name: deploy to cloudflare worker
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@v3
         with:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
