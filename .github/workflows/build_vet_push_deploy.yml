@@ -139,13 +139,8 @@ jobs:
           git push origin "${IMAGE_NAME##*:}"
           printf '%s\n' 'Tagged.'
       - name: deploy to cloudflare worker
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: |
-            versions deploy \
-              --image ${{ env.IMAGE_NAME }} \
-              --name evil-oirtail \
-              --port 80 \
-              --compatibility-date 2026-03-01
+          command: versions deploy --name evil-oirtail --image ${{ env.IMAGE_NAME }} --port 80 --compatibility-date 2026-03-01
