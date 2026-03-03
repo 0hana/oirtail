@@ -139,4 +139,4 @@ jobs:
         with:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy --var IMAGE_NAME:${{ env.IMAGE_NAME }}
+          command: deploy --image ${{ env.IMAGE_NAME }}
