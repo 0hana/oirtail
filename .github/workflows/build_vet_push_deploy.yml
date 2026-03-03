@@ -79,10 +79,6 @@ jobs:
       - name: start docker container
         run: |
           docker run -dp 80:80 --name evil-oirtail "${IMAGE_NAME}"
-      - name: (nektos/act-Only) do NOT attempt surgery on liatrio apprentice-action
-        if: ${{ env.ACT }}
-        run: |
-          printf '%s\n' '(NEKTOS/ACT-ONLY)'
       - name: (Github-Only) attempt surgery on liatrio apprentice-action
         if: ${{ !env.ACT }}
         run: |
@@ -143,4 +139,4 @@ jobs:
         with:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: versions deploy --name evil-oirtail --image ${{ env.IMAGE_NAME }} --port 80 --compatibility-date 2026-03-01
+          command: deploy --var IMAGE_NAME:${{ env.IMAGE_NAME }}
