@@ -79,64 +79,44 @@ jobs:
       - name: start docker container
         run: |
           docker run -dp 80:80 --name evil-oirtail "${IMAGE_NAME}"
-      - name: (Github-Only) attempt surgery on liatrio apprentice-action
-        if: ${{ !env.ACT }}
+      - name: evaluate docker image with liatrio apprentice-action@v1.0.0
+        uses: liatrio/github-actions/apprentice-action@0b41561cca6822cc8d880fe0e49e7807a41fdf91
+      - name: test for minified JSON object
         run: |
-          printf '%s\n' '(GITHUB-ONLY IN-FLIGHT-PATCH)'
-          target="$(find ../../_actions/liatrio/ -type f -name 'endpoint.test.js')"
-          line_1="$(grep -n ' *it("should return a minified JSON object.", async () => {'    "${target}" | cut -d: -f1 || echo 0)"
-          line_2="$(grep -n ' *const res = await axios(`http://${dockerBridgeIP}:80/`);'     "${target}" | cut -d: -f1 \
-          | grep "^$((line_1+1))$" || echo 0)"
-          line_3="$(grep -n ' *// TODO: Finish this test'                                    "${target}" | cut -d: -f1 || echo 0)"
-          line_4="$(grep -n ' *throw new Error("TypeError: Object(...) is not a function");' "${target}" | cut -d: -f1 || echo 0)"
-          line_5="$(grep -n ' *});'                                                          "${target}" | cut -d: -f1 \
-          | grep "^$((line_4+1))$" || echo 0)"
-          if [ -n "${target}" ]             \
-          && [ "$((line_5-line_4))" -eq 1 ] \
-          && [ "$((line_4-line_3))" -eq 1 ] \
-          && [ "$((line_3-line_2))" -eq 1 ] \
-          && [ "$((line_2-line_1))" -eq 1 ]
-          then
-          cat > patch.txt << 'EOF'
-                  const res = await axios({
-                    url: `http://${dockerBridgeIP}:80/`,
-                    method: "get",
-                    transformResponse: [(data) => data]
-                    });
-                  expect(() => JSON.parse(res.data)).to.not.throw();
-                  expect(/\s/.test(res.data.replace(/"(\\.|[^"\\])*"/g, "\"\""))).to.be.false;
-          EOF
-          sed -i'' "${line_2},${line_4}d" "${target}"  # delete the bad code
-          sed -i'' "${line_1}r patch.txt" "${target}"  # inject patch
+          # Assumes return object is parseable JSON, pre-checked by liatrio action tests
+          #
+          if curl localhost                      \
+          |  sed 's/"\(\\.\|[^"\\]\)*"/""/g'     \
+          |  { ! grep "[$(printf '\t\v\f\r') ]"; }
+          then printf '%s\n' 'pass - JSON is minified'     ; exit 0
+          else printf '%s\n' 'FAIL - JSON is NOT minified' ; exit 1
           fi
-      - name: evaluate docker image
-        uses: liatrio/github-actions/apprentice-action@7208146c9ce4749b4ff44ff8030d953a578fa209
       - name: stop docker container
         run: |
           docker rm -f evil-oirtail
-      - name: login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: push to GHCR
-        run: |
-          docker push "${IMAGE_NAME}"
-          docker push "${IMAGE_LATEST}"
-      - name: tag git commit
-        run: |
-          # Configure git user
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Tag commit
-          printf '%s\n' "Tagging commit with Semantic Version ${IMAGE_NAME##*:} ..."
-          git tag         "${IMAGE_NAME##*:}"
-          git push origin "${IMAGE_NAME##*:}"
-          printf '%s\n' 'Tagged.'
-      - name: deploy to cloudflare worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: deploy --image ${{ env.IMAGE_NAME }}
+#      - name: login to GHCR
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#      - name: push to GHCR
+#        run: |
+#          docker push "${IMAGE_NAME}"
+#          docker push "${IMAGE_LATEST}"
+#      - name: tag git commit
+#        run: |
+#          # Configure git user
+#          git config user.name  "github-actions[bot]"
+#          git config user.email "github-actions[bot]@users.noreply.github.com"
+#          # Tag commit
+#          printf '%s\n' "Tagging commit with Semantic Version ${IMAGE_NAME##*:} ..."
+#          git tag         "${IMAGE_NAME##*:}"
+#          git push origin "${IMAGE_NAME##*:}"
+#          printf '%s\n' 'Tagged.'
+#      - name: deploy to cloudflare worker
+#        uses: cloudflare/wrangler-action@v3
+#        with:
+#          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+#          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+#          command: deploy --image ${{ env.IMAGE_NAME }}
