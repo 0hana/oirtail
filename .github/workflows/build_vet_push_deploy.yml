@@ -99,26 +99,29 @@ jobs:
       - name: stop docker container
         run: |
           docker rm -f evil-oirtail
-#      - name: login to GHCR
-#        uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#      - name: push to GHCR
-#        run: |
-#          docker push "${IMAGE_NAME}"
-#          docker push "${IMAGE_LATEST}"
-#      - name: tag git commit
-#        run: |
-#          # Configure git user
-#          git config user.name  "github-actions[bot]"
-#          git config user.email "github-actions[bot]@users.noreply.github.com"
-#          # Tag commit
-#          printf '%s\n' "Tagging commit with Semantic Version ${IMAGE_NAME##*:} ..."
-#          git tag         "${IMAGE_NAME##*:}"
-#          git push origin "${IMAGE_NAME##*:}"
-#          printf '%s\n' 'Tagged.'
+      - if: ${{ env.version_tag != 'do_not_deploy' }}
+        name: login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - if: ${{ env.version_tag != 'do_not_deploy' }}
+        name: push to GHCR
+        run: |
+          docker push "${IMAGE_NAME}"
+          docker push "${IMAGE_LATEST}"
+      - if: ${{ env.version_tag != 'do_not_deploy' }}
+        name: tag git commit
+        run: |
+          # Configure git user
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Tag commit
+          printf '%s\n' "Tagging commit with Semantic Version ${IMAGE_NAME##*:} ..."
+          git tag         "${IMAGE_NAME##*:}"
+          git push origin "${IMAGE_NAME##*:}"
+          printf '%s\n' 'Tagged.'
 #      - name: deploy to cloudflare worker
 #        uses: cloudflare/wrangler-action@v3
 #        with:
