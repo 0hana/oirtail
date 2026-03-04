@@ -20,46 +20,51 @@ permissions:
   packages: write  # Allows pushing to GHCR
 
 jobs:
-  # Compute next Semantic Version number (vX.Y.Z)
+  # The main job
   # ----------------------------------------------------------------------------
-  increment_version:
+  build_vet_push_deploy:
     runs-on: ubuntu-latest
-    outputs:
-      version_tag: ${{ steps.new_version.outputs.version_tag }}
     steps:
       - name: acquire ${{ github.repository }} repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # access to all tags to get latest
-      - name: compute new semantic version number from git commit tags
-        id:   new_version
+      - name: increment semantic version vX.Y.Z
         run: |
-          # Embedded version increment shell logic
-          latest_tag="$(git describe --tags --abbrev=0 2>'/dev/null' || printf '%s\n' 'v0.0.-1')"
-          # --abbrev=0 removes abbreviated commit hash from output
-          major="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f1)"
-          minor="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f2)"
-          patch="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f3)"
-          # We're only going to increment patch version,
-          # so this logic is too oversimplified for a more comprehensive auto-versioning system
-          printf '%s\n' "version_tag=v${major}.${minor}.$((patch+1))" | tee -a "${GITHUB_OUTPUT}"
-
-  # The main job
-  # ----------------------------------------------------------------------------
-  build_vet_push_deploy:
-    needs: increment_version
-    runs-on: ubuntu-latest
-    steps:
+          # Get current Semantic Version tag values
+          # (--abbrev=0 removes abbreviated commit hash from output)
+          # --------------------------------------------------------------------
+          readonly latest_tag=\
+          "$(git describe --tags --abbrev=0 2>'/dev/null' \
+          || printf '%s\n' 'v0.0.-1'
+          )"
+          readonly major="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f1)"
+          readonly minor="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f2)"
+          readonly patch="$(printf '%s\n' "${latest_tag#v}" | cut -d. -f3)"
+          #
+          # Define commit subject line regex patterns for SemVer bump target
+          # --------------------------------------------------------------------
+          major_pattern='^(major|(api|feat(ure)?|patch|(bug-?)?fix)!)(\([-0-9A-Z_a-z]+\))?:'
+          minor_pattern='^(minor|api|feat(ure)?)(\([-0-9A-Z_a-z]\))?:'
+          patch_pattern='^(patch|(bug-?)?fix)(\([-0-9A-Z_a-z]\))?:'
+          #
+          # Compute new Semantic Version
+          # --------------------------------------------------------------------
+          if   git log -1 --format='%s' | grep -E "${major_pattern}"
+          then readonly new_tag="v$((major+1)).0.0"
+          elif git log -1 --format='%s' | grep -E "${minor_pattern}"
+          then readonly new_tag="v${major}.$((minor+1)).0"
+          elif git log -1 --format='%s' | grep -E "${patch_pattern}"
+          then readonly new_tag="v${major}.${minor}.$((patch+1))"
+          else readonly new_tag="do_not_deploy";
+          fi
+          printf '%s\n' "version_tag=${new_tag}" | tee -a "${GITHUB_ENV}"
       - name: compute docker image tag name
-        env:
-          version_tag: ${{ needs.increment_version.outputs.version_tag }}
         run: |
           readonly \
           IMAGE_NAME="$(printf '%s' "ghcr.io/${GITHUB_REPOSITORY}:${version_tag}" | tr '[:upper:]' '[:lower:]')"
           printf '%s\n' "IMAGE_NAME""=${IMAGE_NAME}"           >> "${GITHUB_ENV}"
           printf '%s\n' "IMAGE_LATEST=${IMAGE_NAME%:*}:latest" >> "${GITHUB_ENV}"
-      - name: acquire ${{ github.repository }} repo
-        uses: actions/checkout@v4
       - name: build docker image
         run: |
           docker build                                                                                \
